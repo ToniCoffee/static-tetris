@@ -1,0 +1,13 @@
+{
+  "name": "tetris",
+  "version": "1.0.0",
+  "description": "Tetris game make with html, css and javascript",
+  "main": "index.html",
+  "keywords": [
+    "html",
+    "css",
+    "javascript",
+    "tetris",
+    "game"
+  ]
+}
