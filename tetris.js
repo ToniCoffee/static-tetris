@@ -1,5 +1,6 @@
 const wrapper           = document.getElementById("wrapper");
 const audio             = document.getElementById('audio-file');
+let isMobile            = isMobileDevice();
 let tetrisEntitySize    = getStyle(document.body, '--cellSize');
 let mapWidth            = Math.floor((getStyle(wrapper, 'width') / tetrisEntitySize)); // 16;
 let mapHeight           = Math.floor((getStyle(wrapper, 'height') / tetrisEntitySize) - 2);
@@ -9,6 +10,17 @@ if(mapHeight > 32)      mapHeight = 32;
 
 const map               = [];
 const keyboard          = {};
+const inputDevice       = {
+  device: null,
+  moveRight: null,
+  moveLeft: null,
+  moveDown: null,
+  moveUp: null,
+  rotateRight: null,
+  rotateLeft: null,
+  pause: true
+};
+let info                = null;
 let pause               = true;
 let initTime            = Date.now();
 let currentTime         = Date.now();
@@ -161,30 +173,58 @@ function createInfo() {
   element.style.padding         = "1rem";
   element.style.backgroundColor = "#66666666";
 
-  const paraghrap1              = document.createElement("p");
-  paraghrap1.innerHTML          = 'Press <span>"A"</span> for move left';
-  paraghrap1.style.marginBottom = ".5rem";
-  const paraghrap2              = document.createElement("p");
-  paraghrap2.innerHTML          = 'Press <span>"D"</span> for move right';
-  paraghrap2.style.marginBottom = ".5rem";
-  const paraghrap3              = document.createElement("p");
-  paraghrap3.innerHTML          = 'Press <span>"S"</span> for move down';
-  paraghrap3.style.marginBottom = ".5rem";
-  const paraghrap4              = document.createElement("p");
-  paraghrap4.innerHTML          = 'Press <span>"arrowLeft"</span> for rotate left';
-  paraghrap4.style.marginBottom = ".5rem";
-  const paraghrap5              = document.createElement("p");
-  paraghrap5.innerHTML          = 'Press <span>"arrowRight"</span> for rotate right';
-  paraghrap5.style.marginBottom = ".5rem";
-  const paraghrap6              = document.createElement("p");
-  paraghrap6.innerHTML          = 'Press <span>"space"</span> for pause/play game';
+  if(isMobile) {
+    const paraghrap1              = document.createElement("p");
+    paraghrap1.innerHTML          = '<span>Touch</span> for rotate';
+    paraghrap1.style.marginBottom = ".5rem";
+    const paraghrap2              = document.createElement("p");
+    paraghrap2.innerHTML          = '<span>Touch and move</span> for move';
+    paraghrap2.style.marginBottom = ".5rem";
 
-  element.appendChild(paraghrap1);
-  element.appendChild(paraghrap2);
-  element.appendChild(paraghrap3);
-  element.appendChild(paraghrap4);
-  element.appendChild(paraghrap5);
-  element.appendChild(paraghrap6);
+    const btn = document.createElement('button');
+    btn.innerHTML             = 'Start!';
+    btn.style.fontWeight      = 'bold';
+    btn.style.backgroundColor = '#09f';
+    btn.style.padding         = '.5rem 1rem';
+    btn.style.border          = '1px solid #fff';
+    btn.style.borderRadius    = '7px';
+    btn.removeEventListener ('click', () => {});
+    btn.addEventListener    ('click', e => {
+      pause = !pause;
+      if(!pause) audio.play();
+      else audio.pause();
+    });
+    
+    element.appendChild(paraghrap1);
+    element.appendChild(paraghrap2);
+    element.appendChild(btn);
+  } else {
+    const paraghrap1              = document.createElement("p");
+    paraghrap1.innerHTML          = 'Press <span>"A"</span> for move left';
+    paraghrap1.style.marginBottom = ".5rem";
+    const paraghrap2              = document.createElement("p");
+    paraghrap2.innerHTML          = 'Press <span>"D"</span> for move right';
+    paraghrap2.style.marginBottom = ".5rem";
+    const paraghrap3              = document.createElement("p");
+    paraghrap3.innerHTML          = 'Press <span>"S"</span> for move down';
+    paraghrap3.style.marginBottom = ".5rem";
+    const paraghrap4              = document.createElement("p");
+    paraghrap4.innerHTML          = 'Press <span>"arrowLeft"</span> for rotate left';
+    paraghrap4.style.marginBottom = ".5rem";
+    const paraghrap5              = document.createElement("p");
+    paraghrap5.innerHTML          = 'Press <span>"arrowRight"</span> for rotate right';
+    paraghrap5.style.marginBottom = ".5rem";
+    const paraghrap6              = document.createElement("p");
+    paraghrap6.innerHTML          = 'Press <span>"space"</span> for pause/play game';
+
+    element.appendChild(paraghrap1);
+    element.appendChild(paraghrap2);
+    element.appendChild(paraghrap3);
+    element.appendChild(paraghrap4);
+    element.appendChild(paraghrap5);
+    element.appendChild(paraghrap6);
+  }
+
   gameContainer.appendChild(element);
 }
 
@@ -389,6 +429,17 @@ function resetFps() {
   fpsInterval = 1000 / FPS;
 }
 
+function restart() {
+  hideGameover();
+  resetMap();
+  resetScore();
+  resetLevel();
+  resetFps();
+  pause             = false;
+  keyboard.key      = null;
+  isGameOver        = false;
+}
+
 function realocateMap(i) {
   for (   let ii = i; ii > 1                ; ii--) {
     for ( let jj = 1; jj < map[0].length - 1; jj++) {
@@ -428,17 +479,32 @@ function onCheckGameover() {
       `;
       let gameover            = document.getElementById("gameover");
       gameover.style.display  = "block";
-      gameover.innerHTML      = `
-        <div style="background-color:#333333">Game Over</div>
-        <div style="background-color:#777777">
-          Score: <span>${score}</span><br/>
-          Level: <span>${level}</span><br/>
-          Max Score: <span>${maxScore}</span><br/>
-        </div>
-        <div style="${btnStyle}">
-          Press "L" for restart
-        </div>
-      `;
+
+      if(!isMobile) {
+        gameover.innerHTML      = `
+          <div style="background-color:#333333">Game Over</div>
+          <div style="background-color:#777777">
+            Score: <span>${score}</span><br/>
+            Level: <span>${level}</span><br/>
+            Max Score: <span>${maxScore}</span><br/>
+          </div>
+          <div style="${btnStyle}">
+            Press "L" for restart
+          </div>
+        `;
+      } else { 
+        gameover.innerHTML      = `
+          <div style="background-color:#333333">Game Over</div>
+          <div style="background-color:#777777">
+            Score: <span>${score}</span><br/>
+            Level: <span>${level}</span><br/>
+            Max Score: <span>${maxScore}</span><br/>
+          </div>
+          <button style="${btnStyle}" onclick="restart()">
+            Restart
+          </button>
+        `;
+      }
     }
     
     checkGameOver = false;
@@ -789,31 +855,31 @@ function piece(x1, y1, x2, y2, x3, y3, x4, y4, color = "white") {
 }
 
 function move() {
-  if (keyboard.KeyD) { entity.moveRight();  }
-  if (keyboard.KeyA) { entity.moveLeft();   }
-  if (keyboard.KeyS) {
+  if (inputDevice.moveRight) { entity.moveRight();  }
+  if (inputDevice.moveLeft) { entity.moveLeft();   }
+  if (inputDevice.moveDown) {
     FPS         = 20;
     fpsInterval = 1000 / FPS;
   }
-  if (!keyboard.KeyS) {
+  if (!inputDevice.moveDown) {
     FPS         = initialFPS;
     fpsInterval = 1000 / FPS;
   }
 }
 
 function setRotation() {
-  if (keyboard.key === "ArrowLeft")   { leftRotation = true;  }
-  if (keyboard.key === "ArrowRight")  { rightRotation = true; }
+  if (inputDevice.rotateLeft)   { leftRotation = true;  }
+  if (inputDevice.rotateRight)  { rightRotation = true; }
 }
 
 function rotation() {
-  if (leftRotation) {
+  if (inputDevice.rotateLeft) {
     entity.leftRotation(entity.angle - 90);
-    leftRotation = false;
+    inputDevice.rotateLeft = null;
   }
-  if (rightRotation) {
+  if (inputDevice.rotateRight) {
     entity.rightRotation(entity.angle + 90);
-    rightRotation = false;
+    inputDevice.rotateRight = null;
   }
 }
 
@@ -823,6 +889,7 @@ function getRandomInt(min, max) {
 
 function randomPiece(x, y) {
   let choice = getRandomInt(1, 8);
+
   if (choice === 1) { // L Piece
     const newPiece          = piece(x - 20, y, x - 20, y + 20, x - 20, y + 40, x, y + 40, "orange");
     newPiece.rotationLeft   = rotationLPiece.rotationLeft;
@@ -974,17 +1041,10 @@ function update() {
         keyboard.key      = null;
       }
     } else if (pause === true && isGameOver === false) {
-      info.style.display  = "block";
+      if(info) info.style.display  = "block";
     } else if (pause === true && isGameOver === true) {
-      if (keyboard.KeyL) {
-        hideGameover();
-        resetMap();
-        resetScore();
-        resetLevel();
-        resetFps();
-        pause             = false;
-        keyboard.key      = null;
-        isGameOver        = false;
+      if(!isMobile) {
+        if (keyboard.KeyL) restart();
       }
     }
   /* } catch (e) {
@@ -993,34 +1053,74 @@ function update() {
 }
 
 function listeners() {
-  document.addEventListener("keydown", function (e) {
-    keyboard[e.code]  = true;
-    keyboard.key      = e.code;
-    if (e.code === "Space") pause = !pause;
-    if(!pause) audio.play();
-    else audio.pause();
-  });
+  if(!isMobile) {
+    document.addEventListener("keydown", function (e) {
+      keyboard[e.code]      = true;
+      keyboard.key          = e.code;
+      inputDevice.moveRight = keyboard.KeyD;
+      inputDevice.moveLeft  = keyboard.KeyA;
+      inputDevice.moveDown  = keyboard.KeyS;
 
-  document.addEventListener("keyup", function (e) {
-    keyboard[e.code]  = false;
-    keyboard.key      = null;
-  });
+      if (keyboard.key === "ArrowLeft")   inputDevice.rotateLeft = true;
+      if (keyboard.key === "ArrowRight")  inputDevice.rotateRight = true;
+      if (e.code === "Space")             pause = !pause;
+      if (!pause)                         audio.play();
+      else                                audio.pause();
+    });
+
+    document.addEventListener("keyup", function (e) {
+      keyboard[e.code]        = false;
+      keyboard.key            = null;
+      inputDevice.moveRight   = null;
+      inputDevice.moveLeft    = null;
+      inputDevice.moveDown    = null;
+      inputDevice.rotateLeft  = null;
+      inputDevice.rotateRight = null;
+    });
+  } else {
+    let startX, startY;
+
+    document.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    });
+
+    document.addEventListener('touchmove', e => {
+      inputDevice.moveRight = e.touches[0].clientX > startX + 25;
+      inputDevice.moveLeft  = e.touches[0].clientX < startX - 25;
+      inputDevice.moveDown  = e.touches[0].clientY > startY;
+    });
+
+    document.addEventListener('touchend', e => {
+      inputDevice.moveRight   = null;
+      inputDevice.moveLeft    = null;
+      inputDevice.moveDown    = null;
+      inputDevice.rotateRight = null;
+    });
+    
+    document.addEventListener('click', e => {
+      if(!pause) inputDevice.rotateRight = true;
+    }, true);
+  }
 
   window.addEventListener("load", function () {
     if (!localStorage.getItem("maxScore")) {
       localStorage.setItem("maxScore", "0");
     }
-
-    createInfo();
-    createGameOver();
-    createScore();
-    createMaxScore(); 
   });
 
   window.addEventListener("unload", function () {
     if (localStorage.getItem("maxScore")) {
       localStorage.removeItem("maxScore");
     }
+  });
+
+  document.addEventListener('DOMContentLoaded', e => {
+    createInfo();
+    createGameOver();
+    createScore();
+    createMaxScore();
+    info = document.getElementById('info');
   });
 }
 
